@@ -59,7 +59,16 @@
 }
 
 html { scroll-behavior: smooth; scroll-padding-top: 72px; }
-body { font-family: var(--bs-font-sans-serif); }
+body {
+  font-family: var(--bs-font-sans-serif);
+  opacity: 0;
+  transition: opacity 0.45s ease-in-out;
+}
+
+body.pagina-carregada {
+  opacity: 1;
+}
+
 :focus-visible { outline: 3px solid var(--sinal); outline-offset: 2px; }
 
 /* ---------- Tipografia ---------- */
@@ -467,5 +476,32 @@ footer::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 6px
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/bootstrap.bundle.min.js"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="script.js"></script>
+    <script>
+        window.addEventListener("DOMContentLoaded", () => {
+          requestAnimationFrame(() => {
+            document.body.classList.add("pagina-carregada");
+          });
+        });
+      
+        window.addEventListener("pageshow", (event) => {
+          if (event.persisted) {
+            document.body.classList.add("pagina-carregada");
+          }
+        });
+      
+        document.querySelectorAll('a[href$=".html"]').forEach((link) => {
+          link.addEventListener("click", (e) => {
+            const destino = link.getAttribute("href");
+            if (destino && !destino.startsWith("#") && link.target !== "_blank") {
+              e.preventDefault();
+              document.body.classList.remove("pagina-carregada");
+              setTimeout(() => {
+                window.location.href = destino;
+              }, 400);
+            }
+          });
+        });
+      </script>
+      
 </body>
 </html>
