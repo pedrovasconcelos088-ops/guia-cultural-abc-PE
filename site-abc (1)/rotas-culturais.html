@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-bs-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rotas e Espaços Culturais - Guia Cultural do Grande ABC</title>
+    <!-- Aplica o tema salvo antes da página aparecer (evita a "piscada") -->
+    <script>
+        document.documentElement.setAttribute('data-bs-theme',
+            localStorage.getItem('theme') || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+        document.documentElement.dataset.temaAplicado = '1';
+    </script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <style>
+/* =========================================================
+   Patrimônio Histórico ABC — estilos.css
+   Carregue DEPOIS do Bootstrap e do Leaflet.
+   Substitui os blocos <style> das duas páginas.
+   ========================================================= */
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap');
+
+/* ---------- Tokens ---------- */
+:root {
+    --sinal: #F2B705;          /* amarelo de sinalização industrial */
+    --grafite: #0A1218;
+    --c-sa: #2F6DA8;           /* Santo André */
+    --c-sbc: #B8432F;          /* São Bernardo do Campo */
+    --c-scs: #2E7A55;          /* São Caetano do Sul */
+    --c-dia: #F2B705;          /* Diadema */
+    --faixa-abc: linear-gradient(90deg,
+        var(--c-sa) 0 25%, var(--c-sbc) 25% 50%,
+        var(--c-scs) 50% 75%, var(--c-dia) 75% 100%);
+    --bs-font-sans-serif: 'Barlow', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --bs-body-font-size: 1.0625rem;
+    --bs-body-line-height: 1.6;
+    --bs-border-radius: 6px;
+    --bs-border-radius-lg: 8px;
+}
+
+[data-bs-theme="light"] {
+    --bs-body-bg: #F7F8F9;       --bs-body-bg-rgb: 247,248,249;
+    --bs-tertiary-bg: #E9EDF0;   --bs-tertiary-bg-rgb: 233,237,240;
+    --bs-body-color: #17232D;    --bs-body-color-rgb: 23,35,45;
+    --bs-secondary-color: rgba(23,35,45,.74);
+    --bs-secondary-rgb: 62,79,93;
+    --bs-border-color: #CBD3D9;
+    --bs-heading-color: #0F1A22;
+}
+[data-bs-theme="dark"] {
+    --bs-body-bg: #0F1A22;       --bs-body-bg-rgb: 15,26,34;
+    --bs-tertiary-bg: #16242E;   --bs-tertiary-bg-rgb: 22,36,46;
+    --bs-body-color: #E4EAEE;    --bs-body-color-rgb: 228,234,238;
+    --bs-secondary-color: rgba(228,234,238,.74);
+    --bs-secondary-rgb: 165,181,192;
+    --bs-border-color: #2B3C48;
+    --bs-heading-color: #FFFFFF;
+}
+
+html { scroll-behavior: smooth; scroll-padding-top: 72px; }
+body { font-family: var(--bs-font-sans-serif); }
+:focus-visible { outline: 3px solid var(--sinal); outline-offset: 2px; }
+
+/* ---------- Tipografia ---------- */
+h1, h2, h3, h4, h5, h6, .navbar-brand {
+    font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif;
+    letter-spacing: .005em;
+    line-height: 1.05;
+}
+h2 { font-size: clamp(2rem, 4vw, 2.75rem); }
+h4 { font-size: 1.6rem; }
+h5.card-title { font-size: 1.45rem; line-height: 1.1; }
+.card-text, .text-secondary.small { line-height: 1.55; }
+.extra-small { font-size: .82rem; }   /* classe usada no HTML, mas inexistente no Bootstrap */
+
+/* ---------- Cores utilitárias ---------- */
+.text-warning { color: #A87C00 !important; }
+.navbar .text-warning,
+.hero-section .text-warning,
+[data-bs-theme="dark"] .text-warning { color: var(--sinal) !important; }
+
+.badge.bg-primary { background-color: var(--c-sa) !important; }
+.badge.bg-danger  { background-color: var(--c-sbc) !important; }
+.badge.bg-success { background-color: var(--c-scs) !important; }
+.badge.bg-warning { background-color: var(--c-dia) !important; color: #14202A !important; }
+.badge { border-radius: 4px; font-weight: 600; font-size: .8rem; padding: .4em .65em; }
+
+/* ---------- Botões ---------- */
+.btn { font-weight: 600; }
+.btn.rounded-pill, .badge.rounded-pill { border-radius: 4px !important; }
+
+.btn-warning {
+    --bs-btn-color: #14202A;       --bs-btn-bg: var(--sinal);        --bs-btn-border-color: var(--sinal);
+    --bs-btn-hover-color: #14202A; --bs-btn-hover-bg: #FFC928;       --bs-btn-hover-border-color: #FFC928;
+    --bs-btn-active-color: #14202A; --bs-btn-active-bg: #E0A900;     --bs-btn-active-border-color: #E0A900;
+}
+.btn-outline-warning {
+    --bs-btn-color: var(--bs-body-color);        --bs-btn-border-color: #8FA0AD;
+    --bs-btn-hover-color: #14202A;               --bs-btn-hover-bg: var(--sinal);  --bs-btn-hover-border-color: var(--sinal);
+    --bs-btn-active-color: #14202A;              --bs-btn-active-bg: var(--sinal); --bs-btn-active-border-color: var(--sinal);
+}
+[data-bs-theme="dark"] .btn-outline-warning.text-dark { color: var(--sinal) !important; }
+[data-bs-theme="dark"] .btn-outline-warning.text-dark:hover { color: #14202A !important; }
+
+.card .btn-outline-primary { --bs-btn-color: var(--c-sa);  --bs-btn-border-color: var(--c-sa);  --bs-btn-hover-bg: var(--c-sa);  --bs-btn-hover-border-color: var(--c-sa);  --bs-btn-hover-color:#fff; --bs-btn-active-bg: var(--c-sa);  --bs-btn-active-color:#fff; }
+.card .btn-outline-danger  { --bs-btn-color: var(--c-sbc); --bs-btn-border-color: var(--c-sbc); --bs-btn-hover-bg: var(--c-sbc); --bs-btn-hover-border-color: var(--c-sbc); --bs-btn-hover-color:#fff; --bs-btn-active-bg: var(--c-sbc); --bs-btn-active-color:#fff; }
+.card .btn-outline-success { --bs-btn-color: var(--c-scs); --bs-btn-border-color: var(--c-scs); --bs-btn-hover-bg: var(--c-scs); --bs-btn-hover-border-color: var(--c-scs); --bs-btn-hover-color:#fff; --bs-btn-active-bg: var(--c-scs); --bs-btn-active-color:#fff; }
+[data-bs-theme="dark"] .card .btn-outline-primary { --bs-btn-color: #7DB2E3; }
+[data-bs-theme="dark"] .card .btn-outline-danger  { --bs-btn-color: #EE8D7C; }
+[data-bs-theme="dark"] .card .btn-outline-success { --bs-btn-color: #6FC79A; }
+.card .btn-outline-primary:hover, .card .btn-outline-danger:hover, .card .btn-outline-success:hover { color: #fff; }
+
+/* ---------- Navegação (sempre escura, como placa de estação) ---------- */
+.navbar.bg-body-tertiary {
+    background-color: var(--grafite) !important;
+    border-bottom: 1px solid rgba(255,255,255,.08) !important;
+    --bs-navbar-color: rgba(255,255,255,.72);
+    --bs-navbar-hover-color: #fff;
+    --bs-navbar-active-color: var(--sinal);
+    --bs-navbar-brand-color: #fff;
+    --bs-navbar-brand-hover-color: #fff;
+}
+.navbar-brand { font-size: 1.5rem; font-weight: 700; }
+.navbar-toggler { border-color: rgba(255,255,255,.35); }
+.navbar-toggler-icon { filter: invert(1); }
+.navbar .btn-outline-secondary {
+    --bs-btn-color: #fff; --bs-btn-border-color: rgba(255,255,255,.35);
+    --bs-btn-hover-bg: rgba(255,255,255,.12); --bs-btn-hover-border-color: #fff; --bs-btn-hover-color: #fff;
+}
+@media (min-width: 992px) {
+    .navbar .nav-link { padding-block: 1.1rem; }
+    .navbar .nav-link.active { box-shadow: inset 0 -3px 0 var(--sinal); }
+}
+
+/* ---------- Hero ---------- */
+.hero-section {
+    position: relative;
+    padding: 110px 0 100px;
+    background:
+        linear-gradient(100deg, rgba(10,18,24,.95) 0%, rgba(10,18,24,.78) 55%, rgba(10,18,24,.5) 100%),
+        url('https://images.unsplash.com/photo-1578002171601-902a5a7645a4?auto=format&fit=crop&w=1500&q=80') center/cover no-repeat;
+    color: #fff;
+}
+.hero-section::after {            /* as quatro cores = as quatro cidades */
+    content: ""; position: absolute; inset: auto 0 0 0; height: 6px; background: var(--faixa-abc);
+}
+.hero-section.text-center { text-align: left !important; }
+.hero-section h1 {
+    font-size: clamp(2.7rem, 7vw, 5rem);
+    line-height: .95;
+    max-width: 14ch;
+    margin-bottom: 1.25rem;
+    color: #fff;
+}
+.hero-section .lead {
+    font-size: 1.2rem; max-width: 56ch;
+    margin-left: 0 !important; margin-right: 0 !important;
+    color: rgba(255,255,255,.86);
+}
+.hero-section .d-flex.justify-content-center { justify-content: flex-start !important; }
+.hero-section .badge.bg-warning { font-size: .9rem; padding: .5em .8em; }
+
+/* ---------- Seções ---------- */
+section.py-5 { padding-block: 4.5rem !important; }
+section .text-center > h2 + p { max-width: 62ch; margin-inline: auto; }
+
+/* ---------- Cards ---------- */
+.card {
+    --bs-card-bg: var(--bs-body-bg);
+    --cidade: var(--bs-border-color);
+}
+[data-bs-theme="light"] .card { --bs-card-bg: #fff; }
+.card:has(.badge.bg-primary) { --cidade: var(--c-sa); }
+.card:has(.badge.bg-danger)  { --cidade: var(--c-sbc); }
+.card:has(.badge.bg-success) { --cidade: var(--c-scs); }
+.card:has(.badge.bg-warning) { --cidade: var(--c-dia); }
+
+.card.border-0, .card.shadow-sm, .card.shadow {
+    border: 1px solid var(--bs-border-color) !important;
+    box-shadow: none !important;
+}
+.card:has(.badge) { border-top: 4px solid var(--cidade) !important; }
+.card-img-top { height: 210px; object-fit: cover; filter: saturate(.8); transition: filter .25s ease; }
+.card:hover .card-img-top { filter: saturate(1); }
+
+.monument-card { cursor: pointer; transition: transform .2s ease, border-color .2s ease; }
+.monument-card:hover { transform: translateY(-4px); border-color: var(--cidade) !important; }
+.monument-card .mt-auto > span { color: var(--bs-body-color) !important; }
+.monument-card .mt-auto > span i { color: var(--cidade); }
+.card hr { opacity: .15; }
+
+/* ---------- Pop-up dos monumentos ---------- */
+.popup-overlay {
+    display: none; position: fixed; inset: 0; z-index: 9999;
+    align-items: center; justify-content: center; padding: 1rem; overflow-y: auto;
+    background: rgba(8,14,19,.82);
+    backdrop-filter: blur(3px);
+}
+.popup-overlay.aberto { display: flex; }
+.popup-box {
+    width: 100%; max-width: 740px; max-height: 90vh;
+    display: flex; flex-direction: column;
+    border-radius: 8px; border-top: 4px solid var(--sinal); overflow: hidden;
+    box-shadow: 0 1.5rem 3.5rem rgba(0,0,0,.5);
+    animation: aparecer .22s ease-out;
+}
+@keyframes aparecer { from { opacity: 0; transform: translateY(12px) scale(.98); } to { opacity: 1; transform: none; } }
+.popup-img { width: 100%; height: 300px; object-fit: cover; }
+.popup-body { overflow-y: auto; }
+.popup-body h3 { font-size: 2.1rem; }
+#popupHistoria { font-size: 1.08rem; line-height: 1.75; max-width: 65ch; }
+
+/* ---------- Mapa e rotas ---------- */
+#map { height: 480px; width: 100%; border-radius: 6px; border: 1px solid var(--bs-border-color); z-index: 1; }
+@media (max-width: 575.98px) { #map { height: 360px; } }
+#route-title { color: var(--bs-heading-color) !important; font-size: 1.75rem; }
+#route-steps .list-group-item { padding-inline: 0; border-color: var(--bs-border-color); line-height: 1.4; }
+#route-steps .list-group-item::before { font-weight: 700; color: #A87C00; }
+[data-bs-theme="dark"] #route-steps .list-group-item::before { color: var(--sinal); }
+
+.leaflet-container { font-family: var(--bs-font-sans-serif); }
+.leaflet-popup-content-wrapper, .leaflet-popup-tip { background: var(--bs-body-bg); color: var(--bs-body-color); }
+.leaflet-popup-content-wrapper { border-radius: 6px; }
+
+/* ---------- Blocos de apoio (contexto e dicas) ---------- */
+.p-3.border.rounded, .p-4.border.rounded { border-left: 4px solid var(--sinal) !important; }
+
+/* ---------- Rodapé ---------- */
+footer.bg-body-tertiary {
+    position: relative;
+    background-color: var(--grafite) !important;
+    border-top: 0 !important;
+    padding-top: 2rem !important;
+}
+footer.text-secondary { color: #9FB0BD !important; }
+footer::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 6px; background: var(--faixa-abc); }
+
+/* ---------- Acessibilidade de movimento ---------- */
+@media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .monument-card, .card-img-top { transition: none; }
+    .monument-card:hover { transform: none; }
+    .popup-box { animation: none; }
+}
+
+/* ---------- Linha do tempo e cards clicáveis ---------- */
+.timeline { display: flex; list-style: none; margin: 0; padding: 0 0 1rem; overflow-x: auto; border-top: 3px solid var(--bs-border-color); }
+.timeline li { flex: 0 0 210px; position: relative; padding-top: 1.4rem; }
+.timeline li::before { content: ""; position: absolute; top: -10px; left: 12px; width: 17px; height: 17px; border-radius: 50%; background: var(--cidade); border: 3px solid var(--bs-body-bg); }
+.timeline-item { display: flex; flex-direction: column; gap: .15rem; width: 100%; padding: 0 .75rem; border: 0; background: none; color: var(--bs-body-color); text-align: left; }
+.timeline-ano { font-family: 'Barlow Condensed', sans-serif; font-size: 2rem; font-weight: 700; line-height: 1; }
+.timeline-item small { color: var(--bs-secondary-color); }
+.timeline-item:hover strong { text-decoration: underline; }
+.card-item .card:hover { border-color: var(--cidade) !important; }
+
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg border-bottom sticky-top bg-body-tertiary">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="index.html"><i class="bi bi-bank2 text-warning me-2"></i>Patrimônio Histórico ABC</a>
+            <div class="d-flex align-items-center ms-auto ms-lg-0 order-lg-last gap-2">
+                <button class="btn btn-outline-secondary btn-sm rounded-pill px-3" id="btnThemeToggle" type="button" aria-label="Alternar tema">
+                    <i class="bi bi-moon-stars-fill" id="themeIcon"></i><span class="d-none d-md-inline ms-1" id="themeText">Modo Escuro</span>
+                </button>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-label="Abrir menu"><span class="navbar-toggler-icon"></span></button>
+            </div>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto me-3">
+                    <li class="nav-item"><a class="nav-link" href="index.html"><i class="bi bi-award me-1"></i>Monumentos Históricos</a></li>
+                    <li class="nav-item"><a class="nav-link active fw-semibold" href="rotas-culturais.html"><i class="bi bi-map me-1"></i>Rotas &amp; Espaços Culturais</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#dicas">Dicas do Visitante</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <section id="home" class="hero-section text-center">
+        <div class="container">
+            <span class="badge bg-warning text-dark rounded-pill px-3 py-2 mb-3 fw-semibold">Roteiros Interativos &amp; Equipamentos Culturais</span>
+            <h1 class="display-5 fw-bold">Rotas e Espaços Culturais do Grande ABC</h1>
+            <p class="lead col-lg-8 mx-auto">Complemente o roteiro histórico explorando os principais teatros, museus, centros culturais e parques de Santo André, São Bernardo do Campo, São Caetano do Sul e Diadema.</p>
+            <a href="index.html" class="btn btn-outline-light rounded-pill px-4 mt-2"><i class="bi bi-arrow-left me-1"></i> Voltar para Monumentos Históricos</a>
+        </div>
+    </section>
+
+    <section id="mapa-rotas" class="py-5">
+        <div class="container">
+            <div class="text-center mb-4">
+                <h2 class="fw-bold">Rotas Culturais Interativas</h2>
+                <p class="text-secondary">Selecione uma rota regional para visualizar os espaços culturais no mapa e filtrar as fichas técnicas abaixo.</p>
+                <div class="btn-group gap-2 d-inline-flex flex-wrap justify-content-center" role="group">
+                    <button type="button" class="btn btn-warning active rounded-pill px-4" onclick="carregarRota('santo_andre', this)"><i class="bi bi-building me-1"></i> Rota Santo André</button>
+                    <button type="button" class="btn btn-outline-warning rounded-pill px-4" onclick="carregarRota('sbc', this)"><i class="bi bi-camera-reels me-1"></i> Rota São Bernardo</button>
+                    <button type="button" class="btn btn-outline-warning rounded-pill px-4" onclick="carregarRota('scs_diadema', this)"><i class="bi bi-journal-bookmark me-1"></i> Rota São Caetano &amp; Diadema</button>
+                </div>
+            </div>
+            <div class="card shadow-sm border-0"><div class="card-body p-3 p-md-4"><div class="row g-4">
+                <div class="col-lg-8"><div id="map"></div></div>
+                <div class="col-lg-4 d-flex flex-column justify-content-between"><div>
+                    <h4 id="route-title" class="fw-bold mb-2">Carregando...</h4>
+                    <p id="route-desc" class="text-secondary small mb-3">Selecione uma rota para carregar os detalhes.</p>
+                    <hr>
+                    <h6 class="fw-bold mb-3"><i class="bi bi-pin-map-fill text-danger me-1"></i> Espaços Culturais da Rota:</h6>
+                    <ol id="route-steps" class="list-group list-group-numbered list-group-flush mb-3 small"></ol>
+                </div></div>
+            </div></div></div>
+        </div>
+    </section>
+
+    <section id="espacos" class="py-5 bg-body-tertiary">
+        <div class="container">
+            <div class="text-center mb-5">
+                <h2 class="fw-bold">Espaços Culturais Mapeados</h2>
+                <p id="espacos-subtitulo" class="text-secondary">Exibindo os equipamentos culturais da rota selecionada.</p>
+            </div>
+            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4" id="lista-espacos">
+                <div class="col card-item" data-rota="santo_andre">
+                    <div class="card h-100 shadow-sm border-0">
+                        <img src="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400'%3E%3Crect width='600' height='400' fill='%232B3C48'/%3E%3C/svg%3E" class="card-img-top" alt="Sabina Escola Parque do Conhecimento">
+                        <div class="card-body d-flex flex-column">
+                            <div><span class="badge bg-primary mb-2">Santo André</span><h5 class="card-title fw-bold">Sabina Escola Parque do Conhecimento</h5><p class="card-text text-secondary small">Projetado por Paulo Mendes da Rocha, abriga pinguinário vivo, réplicas de dinossauros e o Planetário Johannes Kepler.</p></div>
+                            <div class="mt-auto"><hr class="my-2">
+                                <p class="mb-1 extra-small text-muted"><i class="bi bi-geo-alt me-1"></i>R. Juquiá, s/n - Vila Eldizia</p>
+                                <p class="mb-3 extra-small text-muted"><i class="bi bi-clock me-1"></i>Sáb/Dom/Feriados: 9h30 às 17h30</p>
+                                <a href="https://sabina.org.br/" target="_blank" rel="noopener noreferrer" class="btn btn-outline-primary btn-sm rounded-pill w-100"><i class="bi bi-box-arrow-up-right me-1"></i>Visitar Site</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col card-item" data-rota="santo_andre">
+                    <div class="card h-100 shadow-sm border-0">
+                        <img src="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400'%3E%3Crect width='600' height='400' fill='%232B3C48'/%3E%3C/svg%3E" class="card-img-top" alt="Teatro Municipal – Maestro Flávio Florence">
+                        <div class="card-body d-flex flex-column">
+                            <div><span class="badge bg-primary mb-2">Santo André</span><h5 class="card-title fw-bold">Teatro Municipal – Maestro Flávio Florence</h5><p class="card-text text-secondary small">Integrado ao Paço Municipal, destaca-se pela acústica e pelo projeto paisagístico assinado por Burle Marx.</p></div>
+                            <div class="mt-auto"><hr class="my-2">
+                                <p class="mb-1 extra-small text-muted"><i class="bi bi-geo-alt me-1"></i>Praça IV Centenário, 01 - Centro</p>
+                                <p class="mb-3 extra-small text-muted"><i class="bi bi-calendar-event me-1"></i>Conforme a programação</p>
+                                <a href="https://web.santoandre.sp.gov.br/" target="_blank" rel="noopener noreferrer" class="btn btn-outline-primary btn-sm rounded-pill w-100"><i class="bi bi-box-arrow-up-right me-1"></i>Visitar Site</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col card-item" data-rota="santo_andre">
+                    <div class="card h-100 shadow-sm border-0">
+                        <img src="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400'%3E%3Crect width='600' height='400' fill='%232B3C48'/%3E%3C/svg%3E" class="card-img-top" alt="Sesc Santo André">
+                        <div class="card-body d-flex flex-column">
+                            <div><span class="badge bg-primary mb-2">Santo André</span><h5 class="card-title fw-bold">Sesc Santo André</h5><p class="card-text text-secondary small">Polo cultural e de lazer com peças de teatro, shows, exposições contemporâneas, oficinas e comedoria.</p></div>
+                            <div class="mt-auto"><hr class="my-2">
+                                <p class="mb-1 extra-small text-muted"><i class="bi bi-geo-alt me-1"></i>R. Tamarutaca, 302 - Vila Guiomar</p>
+                                <p class="mb-3 extra-small text-muted"><i class="bi bi-clock me-1"></i>Ter a Sex: 10h-22h | Sáb/Dom: 10h-19h</p>
+                                <a href="https://www.sescsp.org.br/unidades/santo-andre/" target="_blank" rel="noopener noreferrer" class="btn btn-outline-primary btn-sm rounded-pill w-100"><i class="bi bi-box-arrow-up-right me-1"></i>Visitar Site</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col card-item" data-rota="sbc">
+                    <div class="card h-100 shadow-sm border-0">
+                        <img src="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400'%3E%3Crect width='600' height='400' fill='%232B3C48'/%3E%3C/svg%3E" class="card-img-top" alt="Pinacoteca de São Bernardo">
+                        <div class="card-body d-flex flex-column">
+                            <div><span class="badge bg-danger mb-2">São Bernardo do Campo</span><h5 class="card-title fw-bold">Pinacoteca de São Bernardo</h5><p class="card-text text-secondary small">O maior espaço de artes visuais do ABC, com exposições de arte contemporânea, acervo permanente e jardim de esculturas.</p></div>
+                            <div class="mt-auto"><hr class="my-2">
+                                <p class="mb-1 extra-small text-muted"><i class="bi bi-geo-alt me-1"></i>R. Kara, 135 - Jardim do Mar</p>
+                                <p class="mb-3 extra-small text-muted"><i class="bi bi-ticket-perforated me-1"></i>Entrada e estacionamento gratuitos</p>
+                                <a href="https://www.saobernardo.sp.gov.br/web/cultura/pinacoteca" target="_blank" rel="noopener noreferrer" class="btn btn-outline-danger btn-sm rounded-pill w-100"><i class="bi bi-box-arrow-up-right me-1"></i>Visitar Site</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col card-item" data-rota="sbc">
+                    <div class="card h-100 shadow-sm border-0">
+                        <img src="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400'%3E%3Crect width='600' height='400' fill='%232B3C48'/%3E%3C/svg%3E" class="card-img-top" alt="Teatro Lauro Gomes">
+                        <div class="card-body d-flex flex-column">
+                            <div><span class="badge bg-danger mb-2">São Bernardo do Campo</span><h5 class="card-title fw-bold">Teatro Lauro Gomes</h5><p class="card-text text-secondary small">Tradicional espaço teatral no bairro Rudge Ramos, palco de comédias, espetáculos infantis e festivais de dança.</p></div>
+                            <div class="mt-auto"><hr class="my-2">
+                                <p class="mb-1 extra-small text-muted"><i class="bi bi-geo-alt me-1"></i>R. Helena Jacquey, 171 - Rudge Ramos</p>
+                                <p class="mb-3 extra-small text-muted"><i class="bi bi-calendar-event me-1"></i>Abre conforme programação</p>
+                                <a href="https://www.saobernardo.sp.gov.br/web/cultura/teatro-lauro-gomes" target="_blank" rel="noopener noreferrer" class="btn btn-outline-danger btn-sm rounded-pill w-100"><i class="bi bi-box-arrow-up-right me-1"></i>Visitar Site</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col card-item" data-rota="sbc">
+                    <div class="card h-100 shadow-sm border-0">
+                        <img src="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400'%3E%3Crect width='600' height='400' fill='%232B3C48'/%3E%3C/svg%3E" class="card-img-top" alt="Parque Chácara Silvestre">
+                        <div class="card-body d-flex flex-column">
+                            <div><span class="badge bg-danger mb-2">São Bernardo do Campo</span><h5 class="card-title fw-bold">Parque Chácara Silvestre</h5><p class="card-text text-secondary small">Combina área verde com o histórico Casarão de Wallace Simonsen, abrigando centro de memória e playground inclusivo.</p></div>
+                            <div class="mt-auto"><hr class="my-2">
+                                <p class="mb-1 extra-small text-muted"><i class="bi bi-geo-alt me-1"></i>Av. Wallace Simonsen, 1800 - Nova Petrópolis</p>
+                                <p class="mb-3 extra-small text-muted"><i class="bi bi-clock me-1"></i>Parque: Diariamente das 6h às 20h</p>
+                                <a href="https://www.saobernardo.sp.gov.br/web/cultura/chacara-silvestre" target="_blank" rel="noopener noreferrer" class="btn btn-outline-danger btn-sm rounded-pill w-100"><i class="bi bi-box-arrow-up-right me-1"></i>Visitar Site</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col card-item" data-rota="sbc">
+                    <div class="card h-100 shadow-sm border-0">
+                        <img src="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400'%3E%3Crect width='600' height='400' fill='%232B3C48'/%3E%3C/svg%3E" class="card-img-top" alt="Cia. Cinematográfica Vera Cruz">
+                        <div class="card-body d-flex flex-column">
+                            <div><span class="badge bg-danger mb-2">São Bernardo do Campo</span><h5 class="card-title fw-bold">Cia. Cinematográfica Vera Cruz</h5><p class="card-text text-secondary small">Histórico pavilhão conhecido como a &quot;Hollywood Brasileira&quot; dos anos 50. Recebe grandes feiras, gravações e eventos.</p></div>
+                            <div class="mt-auto"><hr class="my-2">
+                                <p class="mb-1 extra-small text-muted"><i class="bi bi-geo-alt me-1"></i>Av. Lucas Nogueira Garcez, 856 - Centro</p>
+                                <p class="mb-3 extra-small text-muted"><i class="bi bi-calendar-event me-1"></i>Abre conforme agenda de eventos</p>
+                                <a href="https://www.saobernardo.sp.gov.br/web/cultura/estudios-vera-cruz" target="_blank" rel="noopener noreferrer" class="btn btn-outline-danger btn-sm rounded-pill w-100"><i class="bi bi-box-arrow-up-right me-1"></i>Visitar Site</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col card-item" data-rota="scs_diadema">
+                    <div class="card h-100 shadow-sm border-0">
+                        <img src="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400'%3E%3Crect width='600' height='400' fill='%232B3C48'/%3E%3C/svg%3E" class="card-img-top" alt="Fundação Pró-Memória">
+                        <div class="card-body d-flex flex-column">
+                            <div><span class="badge bg-success mb-2">São Caetano do Sul</span><h5 class="card-title fw-bold">Fundação Pró-Memória</h5><p class="card-text text-secondary small">Preserva a história regional através de exposições fotográficas, guarda de acervo documental e memória da imigração.</p></div>
+                            <div class="mt-auto"><hr class="my-2">
+                                <p class="mb-1 extra-small text-muted"><i class="bi bi-geo-alt me-1"></i>Av. Dr. Augusto de Toledo, 255 - Santa Paula</p>
+                                <p class="mb-3 extra-small text-muted"><i class="bi bi-info-circle me-1"></i>Consulte o horário no site oficial</p>
+                                <a href="http://www.fpm.org.br/" target="_blank" rel="noopener noreferrer" class="btn btn-outline-success btn-sm rounded-pill w-100"><i class="bi bi-box-arrow-up-right me-1"></i>Visitar Site</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col card-item" data-rota="scs_diadema">
+                    <div class="card h-100 shadow-sm border-0">
+                        <img src="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400'%3E%3Crect width='600' height='400' fill='%232B3C48'/%3E%3C/svg%3E" class="card-img-top" alt="Teatro Paulo Machado de Carvalho">
+                        <div class="card-body d-flex flex-column">
+                            <div><span class="badge bg-success mb-2">São Caetano do Sul</span><h5 class="card-title fw-bold">Teatro Paulo Machado de Carvalho</h5><p class="card-text text-secondary small">Maior teatro da cidade, sede da Orquestra Filarmônica de São Caetano do Sul e palco de grandes espetáculos nacionais.</p></div>
+                            <div class="mt-auto"><hr class="my-2">
+                                <p class="mb-1 extra-small text-muted"><i class="bi bi-geo-alt me-1"></i>Al. Conde de Porto Alegre, 840 - Santa Maria</p>
+                                <p class="mb-3 extra-small text-muted"><i class="bi bi-music-note-beamed me-1"></i>Sede da Orquestra Filarmônica</p>
+                                <a href="https://www.fascs.com.br/" target="_blank" rel="noopener noreferrer" class="btn btn-outline-success btn-sm rounded-pill w-100"><i class="bi bi-box-arrow-up-right me-1"></i>Visitar Site</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col card-item" data-rota="scs_diadema">
+                    <div class="card h-100 shadow-sm border-0">
+                        <img src="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400'%3E%3Crect width='600' height='400' fill='%232B3C48'/%3E%3C/svg%3E" class="card-img-top" alt="Fábrica de Cultura de Diadema">
+                        <div class="card-body d-flex flex-column">
+                            <div><span class="badge bg-warning text-dark mb-2">Diadema</span><h5 class="card-title fw-bold">Fábrica de Cultura de Diadema</h5><p class="card-text text-secondary small">Espaço voltado para arte-educação com formação artística gratuita, biblioteca, apresentações de hip-hop, circo e teatro.</p></div>
+                            <div class="mt-auto"><hr class="my-2">
+                                <p class="mb-1 extra-small text-muted"><i class="bi bi-geo-alt me-1"></i>R. Ver. Gustavo Sonnewend Neto, 135 - Centro</p>
+                                <p class="mb-3 extra-small text-muted"><i class="bi bi-clock me-1"></i>Ter a Sex: 9h-20h | Sáb: 9h-17h | Atividades gratuitas</p>
+                                <a href="https://www.fabricasdecultura.org.br/diadema" target="_blank" rel="noopener noreferrer" class="btn btn-outline-warning text-dark btn-sm rounded-pill w-100"><i class="bi bi-box-arrow-up-right me-1"></i>Visitar Site</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="dicas" class="py-5">
+        <div class="container">
+            <div class="text-center mb-4"><h2 class="fw-bold">Dicas para Acessar a Rede Cultural</h2></div>
+            <div class="row g-4">
+                <div class="col-md-4"><div class="p-4 border rounded bg-body-tertiary h-100"><i class="bi bi-train-front fs-1 text-warning mb-2 d-block"></i><h5 class="fw-bold">Transporte e Integração</h5><p class="text-secondary mb-0">Utilize a Linha 10-Turquesa da CPTM (estações Santo André e São Caetano) e o Corredor ABD de Trólebus para ligar SBC e Diadema.</p></div></div>
+                <div class="col-md-4"><div class="p-4 border rounded bg-body-tertiary h-100"><i class="bi bi-ticket-perforated fs-1 text-warning mb-2 d-block"></i><h5 class="fw-bold">Gratuidade &amp; Acessibilidade</h5><p class="text-secondary mb-0">Pinacoteca de SBC, Parque Chácara Silvestre e Fábrica de Cultura de Diadema têm entrada gratuita. A Chácara conta com playground inclusivo; confira a acessibilidade de cada local antes de ir.</p></div></div>
+                <div class="col-md-4"><div class="p-4 border rounded bg-body-tertiary h-100"><i class="bi bi-calendar-check fs-1 text-warning mb-2 d-block"></i><h5 class="fw-bold">Consulta de Agenda</h5><p class="text-secondary mb-0">Teatros municipais e a Cia. Vera Cruz abrem conforme a grade de espetáculos e eventos da temporada.</p></div></div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="py-4 border-top bg-body-tertiary text-center text-secondary">
+        <div class="container"><p class="mb-0">&copy; 2026 Patrimônio Histórico e Cultural do Grande ABC - Projeto ADS. Todos os direitos reservados.</p></div>
+    </footer>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

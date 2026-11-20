@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-bs-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monumentos Históricos do Grande ABC - Memória e Patrimônio</title>
+    <!-- Aplica o tema salvo antes da página aparecer (evita a "piscada") -->
+    <script>
+        document.documentElement.setAttribute('data-bs-theme',
+            localStorage.getItem('theme') || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+        document.documentElement.dataset.temaAplicado = '1';
+    </script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+/* =========================================================
+   Patrimônio Histórico ABC — estilos.css
+   Carregue DEPOIS do Bootstrap e do Leaflet.
+   Substitui os blocos <style> das duas páginas.
+   ========================================================= */
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap');
+
+/* ---------- Tokens ---------- */
+:root {
+    --sinal: #F2B705;          /* amarelo de sinalização industrial */
+    --grafite: #0A1218;
+    --c-sa: #2F6DA8;           /* Santo André */
+    --c-sbc: #B8432F;          /* São Bernardo do Campo */
+    --c-scs: #2E7A55;          /* São Caetano do Sul */
+    --c-dia: #F2B705;          /* Diadema */
+    --faixa-abc: linear-gradient(90deg,
+        var(--c-sa) 0 25%, var(--c-sbc) 25% 50%,
+        var(--c-scs) 50% 75%, var(--c-dia) 75% 100%);
+    --bs-font-sans-serif: 'Barlow', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --bs-body-font-size: 1.0625rem;
+    --bs-body-line-height: 1.6;
+    --bs-border-radius: 6px;
+    --bs-border-radius-lg: 8px;
+}
+
+[data-bs-theme="light"] {
+    --bs-body-bg: #F7F8F9;       --bs-body-bg-rgb: 247,248,249;
+    --bs-tertiary-bg: #E9EDF0;   --bs-tertiary-bg-rgb: 233,237,240;
+    --bs-body-color: #17232D;    --bs-body-color-rgb: 23,35,45;
+    --bs-secondary-color: rgba(23,35,45,.74);
+    --bs-secondary-rgb: 62,79,93;
+    --bs-border-color: #CBD3D9;
+    --bs-heading-color: #0F1A22;
+}
+[data-bs-theme="dark"] {
+    --bs-body-bg: #0F1A22;       --bs-body-bg-rgb: 15,26,34;
+    --bs-tertiary-bg: #16242E;   --bs-tertiary-bg-rgb: 22,36,46;
+    --bs-body-color: #E4EAEE;    --bs-body-color-rgb: 228,234,238;
+    --bs-secondary-color: rgba(228,234,238,.74);
+    --bs-secondary-rgb: 165,181,192;
+    --bs-border-color: #2B3C48;
+    --bs-heading-color: #FFFFFF;
+}
+
+html { scroll-behavior: smooth; scroll-padding-top: 72px; }
+body { font-family: var(--bs-font-sans-serif); }
+:focus-visible { outline: 3px solid var(--sinal); outline-offset: 2px; }
+
+/* ---------- Tipografia ---------- */
+h1, h2, h3, h4, h5, h6, .navbar-brand {
+    font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif;
+    letter-spacing: .005em;
+    line-height: 1.05;
+}
+h2 { font-size: clamp(2rem, 4vw, 2.75rem); }
+h4 { font-size: 1.6rem; }
+h5.card-title { font-size: 1.45rem; line-height: 1.1; }
+.card-text, .text-secondary.small { line-height: 1.55; }
+.extra-small { font-size: .82rem; }   /* classe usada no HTML, mas inexistente no Bootstrap */
+
+/* ---------- Cores utilitárias ---------- */
+.text-warning { color: #A87C00 !important; }
+.navbar .text-warning,
+.hero-section .text-warning,
+[data-bs-theme="dark"] .text-warning { color: var(--sinal) !important; }
+
+.badge.bg-primary { background-color: var(--c-sa) !important; }
+.badge.bg-danger  { background-color: var(--c-sbc) !important; }
+.badge.bg-success { background-color: var(--c-scs) !important; }
+.badge.bg-warning { background-color: var(--c-dia) !important; color: #14202A !important; }
+.badge { border-radius: 4px; font-weight: 600; font-size: .8rem; padding: .4em .65em; }
+
+/* ---------- Botões ---------- */
+.btn { font-weight: 600; }
+.btn.rounded-pill, .badge.rounded-pill { border-radius: 4px !important; }
+
+.btn-warning {
+    --bs-btn-color: #14202A;       --bs-btn-bg: var(--sinal);        --bs-btn-border-color: var(--sinal);
+    --bs-btn-hover-color: #14202A; --bs-btn-hover-bg: #FFC928;       --bs-btn-hover-border-color: #FFC928;
+    --bs-btn-active-color: #14202A; --bs-btn-active-bg: #E0A900;     --bs-btn-active-border-color: #E0A900;
+}
+.btn-outline-warning {
+    --bs-btn-color: var(--bs-body-color);        --bs-btn-border-color: #8FA0AD;
+    --bs-btn-hover-color: #14202A;               --bs-btn-hover-bg: var(--sinal);  --bs-btn-hover-border-color: var(--sinal);
+    --bs-btn-active-color: #14202A;              --bs-btn-active-bg: var(--sinal); --bs-btn-active-border-color: var(--sinal);
+}
+[data-bs-theme="dark"] .btn-outline-warning.text-dark { color: var(--sinal) !important; }
+[data-bs-theme="dark"] .btn-outline-warning.text-dark:hover { color: #14202A !important; }
+
+.card .btn-outline-primary { --bs-btn-color: var(--c-sa);  --bs-btn-border-color: var(--c-sa);  --bs-btn-hover-bg: var(--c-sa);  --bs-btn-hover-border-color: var(--c-sa);  --bs-btn-hover-color:#fff; --bs-btn-active-bg: var(--c-sa);  --bs-btn-active-color:#fff; }
+.card .btn-outline-danger  { --bs-btn-color: var(--c-sbc); --bs-btn-border-color: var(--c-sbc); --bs-btn-hover-bg: var(--c-sbc); --bs-btn-hover-border-color: var(--c-sbc); --bs-btn-hover-color:#fff; --bs-btn-active-bg: var(--c-sbc); --bs-btn-active-color:#fff; }
+.card .btn-outline-success { --bs-btn-color: var(--c-scs); --bs-btn-border-color: var(--c-scs); --bs-btn-hover-bg: var(--c-scs); --bs-btn-hover-border-color: var(--c-scs); --bs-btn-hover-color:#fff; --bs-btn-active-bg: var(--c-scs); --bs-btn-active-color:#fff; }
+[data-bs-theme="dark"] .card .btn-outline-primary { --bs-btn-color: #7DB2E3; }
+[data-bs-theme="dark"] .card .btn-outline-danger  { --bs-btn-color: #EE8D7C; }
+[data-bs-theme="dark"] .card .btn-outline-success { --bs-btn-color: #6FC79A; }
+.card .btn-outline-primary:hover, .card .btn-outline-danger:hover, .card .btn-outline-success:hover { color: #fff; }
+
+/* ---------- Navegação (sempre escura, como placa de estação) ---------- */
+.navbar.bg-body-tertiary {
+    background-color: var(--grafite) !important;
+    border-bottom: 1px solid rgba(255,255,255,.08) !important;
+    --bs-navbar-color: rgba(255,255,255,.72);
+    --bs-navbar-hover-color: #fff;
+    --bs-navbar-active-color: var(--sinal);
+    --bs-navbar-brand-color: #fff;
+    --bs-navbar-brand-hover-color: #fff;
+}
+.navbar-brand { font-size: 1.5rem; font-weight: 700; }
+.navbar-toggler { border-color: rgba(255,255,255,.35); }
+.navbar-toggler-icon { filter: invert(1); }
+.navbar .btn-outline-secondary {
+    --bs-btn-color: #fff; --bs-btn-border-color: rgba(255,255,255,.35);
+    --bs-btn-hover-bg: rgba(255,255,255,.12); --bs-btn-hover-border-color: #fff; --bs-btn-hover-color: #fff;
+}
+@media (min-width: 992px) {
+    .navbar .nav-link { padding-block: 1.1rem; }
+    .navbar .nav-link.active { box-shadow: inset 0 -3px 0 var(--sinal); }
+}
+
+/* ---------- Hero ---------- */
+.hero-section {
+    position: relative;
+    padding: 110px 0 100px;
+    background:
+        linear-gradient(100deg, rgba(10,18,24,.95) 0%, rgba(10,18,24,.78) 55%, rgba(10,18,24,.5) 100%),
+        url('https://images.unsplash.com/photo-1578002171601-902a5a7645a4?auto=format&fit=crop&w=1500&q=80') center/cover no-repeat;
+    color: #fff;
+}
+.hero-section::after {            /* as quatro cores = as quatro cidades */
+    content: ""; position: absolute; inset: auto 0 0 0; height: 6px; background: var(--faixa-abc);
+}
+.hero-section.text-center { text-align: left !important; }
+.hero-section h1 {
+    font-size: clamp(2.7rem, 7vw, 5rem);
+    line-height: .95;
+    max-width: 14ch;
+    margin-bottom: 1.25rem;
+    color: #fff;
+}
+.hero-section .lead {
+    font-size: 1.2rem; max-width: 56ch;
+    margin-left: 0 !important; margin-right: 0 !important;
+    color: rgba(255,255,255,.86);
+}
+.hero-section .d-flex.justify-content-center { justify-content: flex-start !important; }
+.hero-section .badge.bg-warning { font-size: .9rem; padding: .5em .8em; }
+
+/* ---------- Seções ---------- */
+section.py-5 { padding-block: 4.5rem !important; }
+section .text-center > h2 + p { max-width: 62ch; margin-inline: auto; }
+
+/* ---------- Cards ---------- */
+.card {
+    --bs-card-bg: var(--bs-body-bg);
+    --cidade: var(--bs-border-color);
+}
+[data-bs-theme="light"] .card { --bs-card-bg: #fff; }
+.card:has(.badge.bg-primary) { --cidade: var(--c-sa); }
+.card:has(.badge.bg-danger)  { --cidade: var(--c-sbc); }
+.card:has(.badge.bg-success) { --cidade: var(--c-scs); }
+.card:has(.badge.bg-warning) { --cidade: var(--c-dia); }
+
+.card.border-0, .card.shadow-sm, .card.shadow {
+    border: 1px solid var(--bs-border-color) !important;
+    box-shadow: none !important;
+}
+.card:has(.badge) { border-top: 4px solid var(--cidade) !important; }
+.card-img-top { height: 210px; object-fit: cover; filter: saturate(.8); transition: filter .25s ease; }
+.card:hover .card-img-top { filter: saturate(1); }
+
+.monument-card { cursor: pointer; transition: transform .2s ease, border-color .2s ease; }
+.monument-card:hover { transform: translateY(-4px); border-color: var(--cidade) !important; }
+.monument-card .mt-auto > span { color: var(--bs-body-color) !important; }
+.monument-card .mt-auto > span i { color: var(--cidade); }
+.card hr { opacity: .15; }
+
+/* ---------- Pop-up dos monumentos ---------- */
+.popup-overlay {
+    display: none; position: fixed; inset: 0; z-index: 9999;
+    align-items: center; justify-content: center; padding: 1rem; overflow-y: auto;
+    background: rgba(8,14,19,.82);
+    backdrop-filter: blur(3px);
+}
+.popup-overlay.aberto { display: flex; }
+.popup-box {
+    width: 100%; max-width: 740px; max-height: 90vh;
+    display: flex; flex-direction: column;
+    border-radius: 8px; border-top: 4px solid var(--sinal); overflow: hidden;
+    box-shadow: 0 1.5rem 3.5rem rgba(0,0,0,.5);
+    animation: aparecer .22s ease-out;
+}
+@keyframes aparecer { from { opacity: 0; transform: translateY(12px) scale(.98); } to { opacity: 1; transform: none; } }
+.popup-img { width: 100%; height: 300px; object-fit: cover; }
+.popup-body { overflow-y: auto; }
+.popup-body h3 { font-size: 2.1rem; }
+#popupHistoria { font-size: 1.08rem; line-height: 1.75; max-width: 65ch; }
+
+/* ---------- Mapa e rotas ---------- */
+#map { height: 480px; width: 100%; border-radius: 6px; border: 1px solid var(--bs-border-color); z-index: 1; }
+@media (max-width: 575.98px) { #map { height: 360px; } }
+#route-title { color: var(--bs-heading-color) !important; font-size: 1.75rem; }
+#route-steps .list-group-item { padding-inline: 0; border-color: var(--bs-border-color); line-height: 1.4; }
+#route-steps .list-group-item::before { font-weight: 700; color: #A87C00; }
+[data-bs-theme="dark"] #route-steps .list-group-item::before { color: var(--sinal); }
+
+.leaflet-container { font-family: var(--bs-font-sans-serif); }
+.leaflet-popup-content-wrapper, .leaflet-popup-tip { background: var(--bs-body-bg); color: var(--bs-body-color); }
+.leaflet-popup-content-wrapper { border-radius: 6px; }
+
+/* ---------- Blocos de apoio (contexto e dicas) ---------- */
+.p-3.border.rounded, .p-4.border.rounded { border-left: 4px solid var(--sinal) !important; }
+
+/* ---------- Rodapé ---------- */
+footer.bg-body-tertiary {
+    position: relative;
+    background-color: var(--grafite) !important;
+    border-top: 0 !important;
+    padding-top: 2rem !important;
+}
+footer.text-secondary { color: #9FB0BD !important; }
+footer::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 6px; background: var(--faixa-abc); }
+
+/* ---------- Acessibilidade de movimento ---------- */
+@media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .monument-card, .card-img-top { transition: none; }
+    .monument-card:hover { transform: none; }
+    .popup-box { animation: none; }
+}
+
+/* ---------- Linha do tempo e cards clicáveis ---------- */
+.timeline { display: flex; list-style: none; margin: 0; padding: 0 0 1rem; overflow-x: auto; border-top: 3px solid var(--bs-border-color); }
+.timeline li { flex: 0 0 210px; position: relative; padding-top: 1.4rem; }
+.timeline li::before { content: ""; position: absolute; top: -10px; left: 12px; width: 17px; height: 17px; border-radius: 50%; background: var(--cidade); border: 3px solid var(--bs-body-bg); }
+.timeline-item { display: flex; flex-direction: column; gap: .15rem; width: 100%; padding: 0 .75rem; border: 0; background: none; color: var(--bs-body-color); text-align: left; }
+.timeline-ano { font-family: 'Barlow Condensed', sans-serif; font-size: 2rem; font-weight: 700; line-height: 1; }
+.timeline-item small { color: var(--bs-secondary-color); }
+.timeline-item:hover strong { text-decoration: underline; }
+.card-item .card:hover { border-color: var(--cidade) !important; }
+
+    </style>
+</head>
+<body>
+<body>
+    <nav class="navbar navbar-expand-lg border-bottom sticky-top bg-body-tertiary">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="index.html"><i class="bi bi-bank2 text-warning me-2"></i>Patrimônio Histórico ABC</a>
+            <div class="d-flex align-items-center ms-auto ms-lg-0 order-lg-last gap-2">
+                <button class="btn btn-outline-secondary btn-sm rounded-pill px-3" id="btnThemeToggle" type="button" aria-label="Alternar tema">
+                    <i class="bi bi-moon-stars-fill" id="themeIcon"></i><span class="d-none d-md-inline ms-1" id="themeText">Modo Escuro</span>
+                </button>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-label="Abrir menu"><span class="navbar-toggler-icon"></span></button>
+            </div>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto me-3">
+                    <li class="nav-item"><a class="nav-link active fw-semibold" href="index.html"><i class="bi bi-award me-1"></i>Monumentos Históricos</a></li>
+                    <li class="nav-item"><a class="nav-link" href="rotas-culturais.html"><i class="bi bi-map me-1"></i>Rotas &amp; Espaços Culturais</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#contexto">Importância Histórica</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <section id="home" class="hero-section text-center">
+        <div class="container">
+            <span class="badge bg-warning text-dark rounded-pill px-3 py-2 mb-3 fw-semibold">Memória, Imigração e Luta Operária</span>
+            <h1 class="display-4 fw-bold">Monumentos Históricos do Grande ABC</h1>
+            <p class="lead col-lg-8 mx-auto">Um mergulho na história de Santo André, São Bernardo do Campo, São Caetano do Sul e Diadema através dos marcos que celebram seus fundadores, imigrantes e trabalhadores.</p>
+            <div class="d-flex justify-content-center gap-3 flex-wrap mt-4">
+                <a href="#monumentos" class="btn btn-warning btn-lg fw-semibold rounded-pill px-4"><i class="bi bi-arrow-down-circle me-1"></i> Conhecer os 10 Monumentos</a>
+                <a href="rotas-culturais.html" class="btn btn-outline-light btn-lg fw-semibold rounded-pill px-4"><i class="bi bi-map-fill me-1"></i> Ver Mapa &amp; Espaços Culturais</a>
+            </div>
+        </div>
+    </section>
+
+    <section id="monumentos" class="py-5 bg-body-tertiary">
+        <div class="container">
+            <div class="text-center mb-4">
+                <h2 class="fw-bold">Acervo de Monumentos Históricos</h2>
+                <p id="monumentos-subtitulo" class="text-secondary mb-2">Exibindo todos os <strong>10</strong> monumentos históricos mapeados no Grande ABC.</p>
+                <p class="text-muted small mb-4"><i class="bi bi-hand-index-thumb me-1"></i>Clique sobre qualquer card para abrir detalhes e a história completa do monumento.</p>
+                <div class="btn-group gap-2 d-inline-flex flex-wrap justify-content-center" role="group" id="filtro-cidade-monumentos">
+                    <button type="button" class="btn btn-warning active rounded-pill px-4" onclick="filtrarMonumentos('todas', this)">Todos (10)</button>
+                    <button type="button" class="btn btn-outline-warning rounded-pill px-4" onclick="filtrarMonumentos('santo_andre', this)">Santo André (3)</button>
+                    <button type="button" class="btn btn-outline-warning rounded-pill px-4" onclick="filtrarMonumentos('sbc', this)">São Bernardo do Campo (3)</button>
+                    <button type="button" class="btn btn-outline-warning rounded-pill px-4" onclick="filtrarMonumentos('scs', this)">São Caetano do Sul (3)</button>
+                    <button type="button" class="btn btn-outline-warning rounded-pill px-4" onclick="filtrarMonumentos('diadema', this)">Diadema (1)</button>
+                </div>
+            </div>
+            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4" id="lista-monumentos">
+                <div class="col monumento-item" data-cidade="santo_andre">
+                    <div class="card h-100 shadow-sm border-0 monument-card" onclick="abrirPopupMonumento(this)"
+                         data-titulo="Monumento a João Ramalho" data-cidade-nome="Santo André" data-badge-class="bg-primary" data-periodo="Período Colonial (1553)" data-imagem="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400'%3E%3Crect width='600' height='400' fill='%232B3C48'/%3E%3C/svg%3E"
+                         data-endereco="Praça IV Centenário - Centro, Santo André" data-descricao="Homenageia o explorador português fundador da histórica Vila de Santo André da Borda do Campo." data-historia="João Ramalho foi um bandeirante e explorador português que chegou ao planalto paulista no início do século XVI, estabelecendo aliança com o cacique Tibiriçá ao casar-se com sua filha, Bartira. Em 8 de abril de 1553, fundou a Vila de Santo André da Borda do Campo, reconhecida pela Coroa Portuguesa como o primeiro núcleo de povoamento europeu afastado do litoral. O monumento na Praça IV Centenário preserva a memória das origens coloniais da região do Grande ABC.">
+                        <img src="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400'%3E%3Crect width='600' height='400' fill='%232B3C48'/%3E%3C/svg%3E" class="card-img-top" alt="Monumento a João Ramalho">
+                        <div class="card-body d-flex flex-column">
+                            <div>
+                                <div class="d-flex justify-content-between align-items-center mb-2"><span class="badge bg-primary">Santo André</span><span class="text-muted small"><i class="bi bi-hourglass-split me-1"></i>Período Colonial (1553)</span></div>
+                                <h5 class="card-title fw-bold">Monumento a João Ramalho</h5>
+                                <p class="card-text text-secondary small">Homenageia o explorador português que, ao lado do cacique Tibiriçá, fundou a histórica Vila de Santo André da Borda do Campo em 1553.</p>
+                            </div>
+                            <div class="mt-auto"><hr class="my-2">
+                                <p class="mb-2 small text-muted"><i class="bi bi-geo-alt-fill text-danger me-1"></i>Praça IV Centenário - Centro, Santo André</p>
+                                <span class="small fw-semibold"><i class="bi bi-book-half me-1"></i>Clique para ver a história</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col monumento-item" data-cidade="santo_andre">
+                    <div class="card h-100 shadow-sm border-0 monument-card" onclick="abrirPopupMonumento(this)"
+                         data-titulo="Monumento ao Trabalhador" data-cidade-nome="Santo André" data-badge-class="bg-primary" data-periodo="Era Industrial (Século XX)" data-imagem="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400'%3E%3Crect width='600' height='400' fill='%232B3C48'/%3E%3C/svg%3E"
+                         data-endereco="Praça do Carmo - Centro, Santo André" data-descricao="Tributo à classe operária que impulsionou a industrialização e o desenvolvimento econômico de Santo André." data-historia="A partir da inauguração da estação ferroviária em 1867 e da instalação de grandes indústrias químicas, têxteis e metalúrgicas no século XX, Santo André atraiu milhares de operários. O Monumento ao Trabalhador foi erguido para simbolizar o esforço coletivo dos homens e mulheres que construíram a riqueza industrial da cidade, além de marcar a importância histórica da organização trabalhista e cidadã no município.">
+                        <img src="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400'%3E%3Crect width='600' height='400' fill='%232B3C48'/%3E%3C/svg%3E" class="card-img-top" alt="Monumento ao Trabalhador">
+                        <div class="card-body d-flex flex-column">
+                            <div>
+                                <div class="d-flex justify-content-between align-items-center mb-2"><span class="badge bg-primary">Santo André</span><span class="text-muted small"><i class="bi bi-hourglass-split me-1"></i>Era Industrial (Século XX)</span></div>
+                                <h5 class="card-title fw-bold">Monumento ao Trabalhador</h5>
+                                <p class="card-text text-secondary small">Tributo à classe operária que transformou Santo André em um dos maiores polos industriais do Brasil no século XX.</p>
+                            </div>
+                            <div class="mt-auto"><hr class="my-2">
+                                <p class="mb-2 small text-muted"><i class="bi bi-geo-alt-fill text-danger me-1"></i>Praça do Carmo - Centro, Santo André</p>
+                                <span class="small fw-semibold"><i class="bi bi-book-half me-1"></i>Clique para ver a história</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col monumento-item" data-cidade="santo_andre">
+                    <div class="card h-100 shadow-sm border-0 monument-card" onclick="abrirPopupMonumento(this)"
+                         data-titulo="Monumento ao Imigrante Italiano" data-cidade-nome="Santo André" data-badge-class="bg-primary" data-periodo="Final do Século XIX" data-imagem="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400'%3E%3Crect width='600' height='400' fill='%232B3C48'/%3E%3C/svg%3E"
+                         data-endereco="Praça Itália - Vila Assunção, Santo André" data-descricao="Celebra a chegada das famílias italianas fundamentais na formação das primeiras vilas operárias e indústrias locais." data-historia="No final do século XIX e início do século XX, centenas de imigrantes italianos fixaram residência em Santo André, trabalhando na expansão da ferrovia São Paulo Railway, nas olarias de tijolos e cerâmica, no comércio e nas primeiras fábricas da região. O monumento na Praça Itália honra a perseverança dessas famílias, cujas tradições culturais, gastronômicas e arquitetônicas moldaram bairros inteiros da cidade.">
+                        <img src="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400'%3E%3Crect width='600' height='400' fill='%232B3C48'/%3E%3C/svg%3E" class="card-img-top" alt="Monumento ao Imigrante Italiano">
+                        <div class="card-body d-flex flex-column">
+                            <div>
+                                <div class="d-flex justify-content-between align-items-center mb-2"><span class="badge bg-primary">Santo André</span><span class="text-muted small"><i class="bi bi-hourglass-split me-1"></i>Final do Século XIX</span></div>
+                                <h5 class="card-title fw-bold">Monumento ao Imigrante Italiano</h5>
+                                <p class="card-text text-secondary small">Celebra a chegada das famílias italianas que atuaram na ferrovia, nas olarias e nas primeiras fábricas da cidade.</p>
+                            </div>
+                            <div class="mt-auto"><hr class="my-2">
+                                <p class="mb-2 small text-muted"><i class="bi bi-geo-alt-fill text-danger me-1"></i>Praça Itália - Vila Assunção, Santo André</p>
+                                <span class="small fw-semibold"><i class="bi bi-book-half me-1"></i>Clique para ver a história</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col monumento-item" data-cidade="sbc">
+                    <div class="card h-100 shadow-sm border-0 monument-card" onclick="abrirPopupMonumento(this)"
+                         data-titulo="Monumento Kasato Maru" data-cidade-nome="São Bernardo do Campo" data-badge-class="bg-danger" data-periodo="Imigração Japonesa (1908)" data-imagem="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400'%3E%3Crect width='600' height='400' fill='%232B3C48'/%3E%3C/svg%3E"
+                         data-endereco="Av. Wallace Simonsen (próx. ao Parque Raphael Lazzuri) - SBC" data-descricao="Relembra o navio que trouxe os primeiros imigrantes japoneses ao Brasil em 1908." data-historia="Em 18 de junho de 1908, o navio Kasato Maru atracou no Porto de Santos trazendo os primeiros 781 imigrantes japoneses ao Brasil. Muitas dessas famílias e seus descendentes estabeleceram-se em São Bernardo do Campo, contribuindo decisivamente para o cinturão verde agrícola da região, para o comércio e para a indústria automobilística. O monumento celebra os laços de amizade Brasil-Japão e o legado cultural nipo-brasileiro na cidade.">
+                        <img src="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400'%3E%3Crect width='600' height='400' fill='%232B3C48'/%3E%3C/svg%3E" class="card-img-top" alt="Monumento Kasato Maru">
+                        <div class="card-body d-flex flex-column">
+                            <div>
+                                <div class="d-flex justify-content-between align-items-center mb-2"><span class="badge bg-danger">São Bernardo do Campo</span><span class="text-muted small"><i class="bi bi-hourglass-split me-1"></i>Imigração Japonesa (1908)</span></div>
+                                <h5 class="card-title fw-bold">Monumento Kasato Maru</h5>
+                                <p class="card-text text-secondary small">Relembra a embarcação que trouxe os primeiros imigrantes japoneses ao Brasil em 1908 e celebra a cultura nipo-brasileira em SBC.</p>
+                            </div>
+                            <div class="mt-auto"><hr class="my-2">
+                                <p class="mb-2 small text-muted"><i class="bi bi-geo-alt-fill text-danger me-1"></i>Av. Wallace Simonsen (próx. ao Parque Raphael Lazzuri) - SBC</p>
+                                <span class="small fw-semibold"><i class="bi bi-book-half me-1"></i>Clique para ver a história</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col monumento-item" data-cidade="sbc">
+                    <div class="card h-100 shadow-sm border-0 monument-card" onclick="abrirPopupMonumento(this)"
+                         data-titulo="Monumento à Maçonaria" data-cidade-nome="São Bernardo do Campo" data-badge-class="bg-danger" data-periodo="História Cívica e Institucional" data-imagem="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400'%3E%3Crect width='600' height='400' fill='%232B3C48'/%3E%3C/svg%3E"
+                         data-endereco="Praça da Maçonaria - Jardim do Mar, SBC" data-descricao="Marco simbólico que registra a atuação histórica das lojas maçônicas no desenvolvimento cívico e social de São Bernardo." data-historia="Localizado na Praça da Maçonaria, no Jardim do Mar, o monumento homenageia a participação das lojas maçônicas na história de São Bernardo do Campo. Ao longo das décadas, a instituição esteve envolvida em iniciativas filantrópicas, campanhas educacionais e movimentos cívicos voltados ao progresso comunitário e à emancipação político-administrativa do município.">
+                        <img src="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400'%3E%3Crect width='600' height='400' fill='%232B3C48'/%3E%3C/svg%3E" class="card-img-top" alt="Monumento à Maçonaria">
+                        <div class="card-body d-flex flex-column">
+                            <div>
+                                <div class="d-flex justify-content-between align-items-center mb-2"><span class="badge bg-danger">São Bernardo do Campo</span><span class="text-muted small"><i class="bi bi-hourglass-split me-1"></i>História Cívica e Institucional</span></div>
+                                <h5 class="card-title fw-bold">Monumento à Maçonaria</h5>
+                                <p class="card-text text-secondary small">Marco simbólico que registra a presença histórica das lojas maçônicas em ações filantrópicas e cívicas do município.</p>
+                            </div>
+                            <div class="mt-auto"><hr class="my-2">
+                                <p class="mb-2 small text-muted"><i class="bi bi-geo-alt-fill text-danger me-1"></i>Praça da Maçonaria - Jardim do Mar, SBC</p>
+                                <span class="small fw-semibold"><i class="bi bi-book-half me-1"></i>Clique para ver a história</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col monumento-item" data-cidade="sbc">
+                    <div class="card h-100 shadow-sm border-0 monument-card" onclick="abrirPopupMonumento(this)"
+                         data-titulo="Obelisco do Soldado Constitucionalista" data-cidade-nome="São Bernardo do Campo" data-badge-class="bg-danger" data-periodo="Revolução Constitucionalista (1932)" data-imagem="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400'%3E%3Crect width='600' height='400' fill='%232B3C48'/%3E%3C/svg%3E"
+                         data-endereco="Praça Angelo Marin - Paulicéia, SBC" data-descricao="Homenageia os combatentes da Revolução de 1932. Inaugurado em 1982, no cinquentenário do movimento, é patrimônio histórico de São Bernardo." data-historia="A Revolução Constitucionalista de 1932 foi o levante de São Paulo que exigia o fim do governo provisório e a promulgação de uma nova Constituição para o país. O Grande ABC teve participação ativa no movimento, e São Bernardo do Campo ergueu o seu próprio obelisco ao soldado constitucionalista. Inaugurado em 9 de julho de 1982, no cinquentenário da Revolução, durante a gestão do prefeito Tito Costa, ele fica na Praça Angelo Marin, no bairro Paulicéia, entre as ruas Líbero Badaró e Belém, a poucos metros da Rua MMDC. O monumento foi tombado como patrimônio histórico do município em 14 de março de 2001.">
+                        <img src="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400'%3E%3Crect width='600' height='400' fill='%232B3C48'/%3E%3C/svg%3E" class="card-img-top" alt="Obelisco do Soldado Constitucionalista">
+                        <div class="card-body d-flex flex-column">
+                            <div>
+                                <div class="d-flex justify-content-between align-items-center mb-2"><span class="badge bg-danger">São Bernardo do Campo</span><span class="text-muted small"><i class="bi bi-hourglass-split me-1"></i>Revolução Constitucionalista (1932)</span></div>
+                                <h5 class="card-title fw-bold">Obelisco do Soldado Constitucionalista</h5>
+                                <p class="card-text text-secondary small">Homenageia os combatentes da Revolução de 1932. Inaugurado em 1982, no cinquentenário do movimento, é patrimônio tombado de São Bernardo.</p>
+                            </div>
+                            <div class="mt-auto"><hr class="my-2">
+                                <p class="mb-2 small text-muted"><i class="bi bi-geo-alt-fill text-danger me-1"></i>Praça Angelo Marin - Paulicéia, SBC</p>
+                                <span class="small fw-semibold"><i class="bi bi-book-half me-1"></i>Clique para ver a história</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col monumento-item" data-cidade="scs">
+                    <div class="card h-100 shadow-sm border-0 monument-card" onclick="abrirPopupMonumento(this)"
+                         data-titulo="Monumento aos Autonomistas" data-cidade-nome="São Caetano do Sul" data-badge-class="bg-success" data-periodo="Emancipação Política (1948)" data-imagem="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400'%3E%3Crect width='600' height='400' fill='%232B3C48'/%3E%3C/svg%3E"
+                         data-endereco="Praça dos Autonomistas - Centro, São Caetano do Sul" data-descricao="Homenageia os líderes que conquistaram a emancipação político-administrativa de São Caetano do Sul em 1948." data-historia="Durante décadas, São Caetano foi um subdistrito pertencente a Santo André, apesar de seu rápido crescimento industrial e populacional. Moradores, comerciantes e lideranças locais fundaram o movimento autonomista reivindicando independência administrativa. Após intensa mobilização e plebiscito popular realizado em 24 de outubro de 1948, São Caetano do Sul conquistou sua emancipação, celebrada permanentemente neste monumento.">
+                        <img src="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400'%3E%3Crect width='600' height='400' fill='%232B3C48'/%3E%3C/svg%3E" class="card-img-top" alt="Monumento aos Autonomistas">
+                        <div class="card-body d-flex flex-column">
+                            <div>
+                                <div class="d-flex justify-content-between align-items-center mb-2"><span class="badge bg-success">São Caetano do Sul</span><span class="text-muted small"><i class="bi bi-hourglass-split me-1"></i>Emancipação Política (1948)</span></div>
+                                <h5 class="card-title fw-bold">Monumento aos Autonomistas</h5>
+                                <p class="card-text text-secondary small">Homenageia os cidadãos e líderes que conquistaram a emancipação político-administrativa de São Caetano do Sul em 1948.</p>
+                            </div>
+                            <div class="mt-auto"><hr class="my-2">
+                                <p class="mb-2 small text-muted"><i class="bi bi-geo-alt-fill text-danger me-1"></i>Praça dos Autonomistas - Centro, São Caetano do Sul</p>
+                                <span class="small fw-semibold"><i class="bi bi-book-half me-1"></i>Clique para ver a história</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col monumento-item" data-cidade="scs">
+                    <div class="card h-100 shadow-sm border-0 monument-card" onclick="abrirPopupMonumento(this)"
+                         data-titulo="Monumento à Mulher" data-cidade-nome="São Caetano do Sul" data-badge-class="bg-success" data-periodo="Memória Social e Cidadania" data-imagem="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400'%3E%3Crect width='600' height='400' fill='%232B3C48'/%3E%3C/svg%3E"
+                         data-endereco="Av. Goiás (próx. ao Espaço Verde Chico Mendes) - SCS" data-descricao="Reconhece a participação decisiva das mulheres na construção social, cultural e econômica de São Caetano do Sul." data-historia="Desde os tempos do antigo núcleo colonial e das primeiras fábricas de cerâmica e louças da cidade, as mulheres desempenharam papel central tanto no trabalho fabril quanto na educação, na saúde e na organização comunitária de São Caetano do Sul. O Monumento à Mulher simboliza o reconhecimento público à força, resiliência e protagonismo feminino na história do município.">
+                        <img src="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400'%3E%3Crect width='600' height='400' fill='%232B3C48'/%3E%3C/svg%3E" class="card-img-top" alt="Monumento à Mulher">
+                        <div class="card-body d-flex flex-column">
+                            <div>
+                                <div class="d-flex justify-content-between align-items-center mb-2"><span class="badge bg-success">São Caetano do Sul</span><span class="text-muted small"><i class="bi bi-hourglass-split me-1"></i>Memória Social e Cidadania</span></div>
+                                <h5 class="card-title fw-bold">Monumento à Mulher</h5>
+                                <p class="card-text text-secondary small">Reconhece a participação decisiva das mulheres sul-caetanenses na educação, no trabalho e na memória cultural da cidade.</p>
+                            </div>
+                            <div class="mt-auto"><hr class="my-2">
+                                <p class="mb-2 small text-muted"><i class="bi bi-geo-alt-fill text-danger me-1"></i>Av. Goiás (próx. ao Espaço Verde Chico Mendes) - SCS</p>
+                                <span class="small fw-semibold"><i class="bi bi-book-half me-1"></i>Clique para ver a história</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col monumento-item" data-cidade="scs">
+                    <div class="card h-100 shadow-sm border-0 monument-card" onclick="abrirPopupMonumento(this)"
+                         data-titulo="Praça dos Imigrantes" data-cidade-nome="São Caetano do Sul" data-badge-class="bg-success" data-periodo="Imigração Italiana (século XIX)" data-imagem="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400'%3E%3Crect width='600' height='400' fill='%232B3C48'/%3E%3C/svg%3E"
+                         data-endereco="Av. Presidente Kennedy - Bairro Olímpico, SCS" data-descricao="Espaço público dedicado aos imigrantes que ajudaram a formar São Caetano do Sul, com conjunto escultórico e chafariz interativo." data-historia="A Praça dos Imigrantes, oficialmente Praça Oswaldo Martins Salgado, fica na Avenida Presidente Kennedy, no Bairro Olímpico, e homenageia os imigrantes que ajudaram a formar São Caetano do Sul. A cidade nasceu do Núcleo Colonial criado em 1877, com famílias italianas vindas principalmente do Vêneto, no norte da Itália. Na praça, um conjunto escultórico com figuras humanas em torno de uma grande peça curva em metal, assinada por A. Sarro, lembra essa trajetória. Em novembro de 2022, o local ganhou também um chafariz interativo com 25 jatos de água, que se tornou atração de lazer para as famílias.">
+                        <img src="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400'%3E%3Crect width='600' height='400' fill='%232B3C48'/%3E%3C/svg%3E" class="card-img-top" alt="Praça dos Imigrantes">
+                        <div class="card-body d-flex flex-column">
+                            <div>
+                                <div class="d-flex justify-content-between align-items-center mb-2"><span class="badge bg-success">São Caetano do Sul</span><span class="text-muted small"><i class="bi bi-hourglass-split me-1"></i>Imigração Italiana (século XIX)</span></div>
+                                <h5 class="card-title fw-bold">Praça dos Imigrantes</h5>
+                                <p class="card-text text-secondary small">Conjunto escultórico que homenageia os imigrantes que formaram a cidade, com chafariz interativo, no Bairro Olímpico.</p>
+                            </div>
+                            <div class="mt-auto"><hr class="my-2">
+                                <p class="mb-2 small text-muted"><i class="bi bi-geo-alt-fill text-danger me-1"></i>Av. Presidente Kennedy - Bairro Olímpico, SCS</p>
+                                <span class="small fw-semibold"><i class="bi bi-book-half me-1"></i>Clique para ver a história</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col monumento-item" data-cidade="diadema">
+                    <div class="card h-100 shadow-sm border-0 monument-card" onclick="abrirPopupMonumento(this)"
+                         data-titulo="Monumento aos Migrantes" data-cidade-nome="Diadema" data-badge-class="bg-warning text-dark" data-periodo="Emancipação e Expansão (1959)" data-imagem="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400'%3E%3Crect width='600' height='400' fill='%232B3C48'/%3E%3C/svg%3E"
+                         data-endereco="Praça da Moça - Centro, Diadema" data-descricao="Presta tributo aos milhares de brasileiros vindos de diversas regiões do país que construíram Diadema." data-historia="Emancipada de São Bernardo do Campo em 1959, Diadema viveu um acelerado crescimento urbano e industrial nas décadas seguintes impulsionado pela chegada de milhares de migrantes brasileiros — especialmente do Nordeste e de Minas Gerais — em busca de trabalho e melhores condições de vida. O Monumento aos Migrantes reconhece essa trajetória de coragem e destaca a riqueza cultural, musical e comunitária trazida por esses trabalhadores.">
+                        <img src="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400'%3E%3Crect width='600' height='400' fill='%232B3C48'/%3E%3C/svg%3E" class="card-img-top" alt="Monumento aos Migrantes">
+                        <div class="card-body d-flex flex-column">
+                            <div>
+                                <div class="d-flex justify-content-between align-items-center mb-2"><span class="badge bg-warning text-dark">Diadema</span><span class="text-muted small"><i class="bi bi-hourglass-split me-1"></i>Emancipação e Expansão (1959)</span></div>
+                                <h5 class="card-title fw-bold">Monumento aos Migrantes</h5>
+                                <p class="card-text text-secondary small">Presta homenagem aos milhares de brasileiros vindos de diversas regiões do país que construíram Diadema.</p>
+                            </div>
+                            <div class="mt-auto"><hr class="my-2">
+                                <p class="mb-2 small text-muted"><i class="bi bi-geo-alt-fill text-danger me-1"></i>Praça da Moça - Centro, Diadema</p>
+                                <span class="small fw-semibold"><i class="bi bi-book-half me-1"></i>Clique para ver a história</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="contexto" class="py-5">
+        <div class="container">
+            <div class="row g-4 align-items-center">
+                <div class="col-lg-7">
+                    <h2 class="fw-bold mb-3">Por que preservar os monumentos do ABC?</h2>
+                    <p class="text-secondary">Os monumentos públicos do Grande ABC funcionam como documentos históricos a céu aberto. Eles sintetizam as principais fases da formação regional: desde a fundação colonial no século XVI, passando pelas colônias de imigrantes europeus e japoneses, até a chegada dos migrantes brasileiros e a consolidação do movimento operário no século XX.</p>
+                    <div class="row g-3 mt-2">
+                        <div class="col-sm-6"><div class="p-3 border rounded bg-body-tertiary h-100"><h6 class="fw-bold mb-1"><i class="bi bi-people-fill text-warning me-2"></i>Identidade Plural</h6><p class="small text-secondary mb-0">Retratam a união de povos indígenas, colonizadores, imigrantes e migrantes na construção das cidades.</p></div></div>
+                        <div class="col-sm-6"><div class="p-3 border rounded bg-body-tertiary h-100"><h6 class="fw-bold mb-1"><i class="bi bi-building-gear text-warning me-2"></i>Memória do Trabalho</h6><p class="small text-secondary mb-0">Valorizam o papel histórico dos trabalhadores na industrialização e na conquista de direitos sociais.</p></div></div>
+                    </div>
+                </div>
+                <div class="col-lg-5">
+                    <div class="card border-0 shadow bg-body-tertiary p-4 text-center"><div class="card-body">
+                        <i class="bi bi-map-fill fs-1 text-warning mb-3 d-block"></i>
+                        <h4 class="fw-bold">Explore Também o Mapa Interativo</h4>
+                        <p class="text-secondary small mb-4">Quer traçar roteiros pela região e conhecer teatros, museus, parques e centros culturais com horários e sites oficiais?</p>
+                        <a href="rotas-culturais.html" class="btn btn-warning fw-semibold rounded-pill px-4 py-2 w-100">Acessar Rotas &amp; Espaços Culturais <i class="bi bi-arrow-right ms-1"></i></a>
+                    </div></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pop-up dos monumentos (controlado pelo script.js) -->
+    <div id="popupMonumento" class="popup-overlay" onclick="fecharPopupFora(event)">
+        <div class="popup-box bg-body text-body" role="dialog" aria-modal="true" aria-labelledby="popupTitulo">
+            <div class="position-relative">
+                <img id="popupImg" src="" alt="" class="popup-img">
+                <button type="button" onclick="fecharPopupMonumento()" class="btn btn-light btn-sm rounded-circle shadow position-absolute top-0 end-0 m-3" aria-label="Fechar" style="width: 36px; height: 36px;"><i class="bi bi-x-lg"></i></button>
+            </div>
+            <div class="popup-body p-4">
+                <div class="d-flex flex-wrap align-items-center gap-2 mb-2"><span id="popupCidade" class="badge"></span><span id="popupPeriodo" class="badge bg-secondary"></span></div>
+                <h3 id="popupTitulo" class="fw-bold mb-2"></h3>
+                <p id="popupDescricao" class="text-secondary mb-3"></p>
+                <hr>
+                <h6 class="fw-bold small text-warning-emphasis mb-2"><i class="bi bi-journal-text me-1"></i>Contexto e História</h6>
+                <p id="popupHistoria" class="mb-0"></p>
+            </div>
+            <div class="p-3 border-top bg-body-tertiary d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <small class="text-muted"><i class="bi bi-geo-alt-fill text-danger me-1"></i><span id="popupEndereco"></span></small>
+                <button type="button" onclick="fecharPopupMonumento()" class="btn btn-warning btn-sm fw-semibold rounded-pill px-4">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <footer class="py-4 border-top bg-body-tertiary text-center text-secondary">
+        <div class="container"><p class="mb-0">&copy; 2026 Patrimônio Histórico e Cultural do Grande ABC - Projeto ADS. Todos os direitos reservados.</p></div>
+    </footer>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/bootstrap.bundle.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
